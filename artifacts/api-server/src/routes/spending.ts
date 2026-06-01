@@ -42,7 +42,8 @@ router.get("/spending/summary", async (req, res): Promise<void> => {
     emotionMap[r.emotion].count++;
     emotionMap[r.emotion].amount += r.amount;
 
-    if (!categoryMap[r.category]) categoryMap[r.category] = { count: 0, amount: 0 };
+    if (!categoryMap[r.category])
+      categoryMap[r.category] = { count: 0, amount: 0 };
     categoryMap[r.category].count++;
     categoryMap[r.category].amount += r.amount;
   }
@@ -112,14 +113,13 @@ router.get("/spending", async (req, res): Promise<void> => {
     reason: r.reason,
     note: r.note ?? null,
     createdAt: r.createdAt.toISOString(),
-    analysis:
-      r.analysisSpendingPattern
-        ? {
-            spendingPattern: r.analysisSpendingPattern,
-            emotionalTrigger: r.analysisEmotionalTrigger ?? "",
-            personalizedAdvice: r.analysisPersonalizedAdvice ?? "",
-          }
-        : undefined,
+    analysis: r.analysisSpendingPattern
+      ? {
+          spendingPattern: r.analysisSpendingPattern,
+          emotionalTrigger: r.analysisEmotionalTrigger ?? "",
+          personalizedAdvice: r.analysisPersonalizedAdvice ?? "",
+        }
+      : undefined,
   }));
 
   res.json(result);
@@ -158,7 +158,6 @@ router.post("/spending", async (req, res): Promise<void> => {
     createdAt: record.createdAt.toISOString(),
     analysis: {
       spendingPattern: record.analysisSpendingPattern!,
-      shortPattern: analysis.shortPattern,
       emotionalTrigger: record.analysisEmotionalTrigger!,
       personalizedAdvice: record.analysisPersonalizedAdvice!,
     },
@@ -191,20 +190,21 @@ router.get("/spending/:id", async (req, res): Promise<void> => {
     reason: record.reason,
     note: record.note ?? null,
     createdAt: record.createdAt.toISOString(),
-    analysis:
-      record.analysisSpendingPattern
-        ? {
-            spendingPattern: record.analysisSpendingPattern,
-            emotionalTrigger: record.analysisEmotionalTrigger ?? "",
-            personalizedAdvice: record.analysisPersonalizedAdvice ?? "",
-          }
-        : undefined,
+    analysis: record.analysisSpendingPattern
+      ? {
+          spendingPattern: record.analysisSpendingPattern,
+          emotionalTrigger: record.analysisEmotionalTrigger ?? "",
+          personalizedAdvice: record.analysisPersonalizedAdvice ?? "",
+        }
+      : undefined,
   });
 });
 
 router.delete("/spending/:id", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const params = DeleteSpendingRecordParams.safeParse({ id: parseInt(raw, 10) });
+  const params = DeleteSpendingRecordParams.safeParse({
+    id: parseInt(raw, 10),
+  });
   if (!params.success) {
     res.status(400).json({ error: "Invalid id" });
     return;
