@@ -1,0 +1,351 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: FLONE - Emotional Spending Tracker API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: spending
+    description: Spending record operations
+  - name: analysis
+    description: AI analysis operations
+  - name: user
+    description: User profile operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /spending:
+    get:
+      operationId: listSpendingRecords
+      tags: [spending]
+      summary: List all spending records
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of spending records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpendingRecord"
+    post:
+      operationId: createSpendingRecord
+      tags: [spending]
+      summary: Create a new spending record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpendingInput"
+      responses:
+        "201":
+          description: Created spending record with AI analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpendingRecord"
+        "400":
+          description: Validation error
+
+  /spending/{id}:
+    get:
+      operationId: getSpendingRecord
+      tags: [spending]
+      summary: Get a spending record by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Spending record with analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpendingRecord"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSpendingRecord
+      tags: [spending]
+      summary: Delete a spending record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /spending/summary:
+    get:
+      operationId: getSpendingSummary
+      tags: [analysis]
+      summary: Get emotional spending summary and patterns
+      responses:
+        "200":
+          description: Summary statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpendingSummary"
+
+  /user/profile:
+    get:
+      operationId: getUserProfile
+      tags: [user]
+      summary: Get user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+    put:
+      operationId: updateUserProfile
+      tags: [user]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileInput"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /user/onboarding:
+    post:
+      operationId: completeOnboarding
+      tags: [user]
+      summary: Complete onboarding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingInput"
+      responses:
+        "200":
+          description: Onboarding completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    SpendingInput:
+      type: object
+      required:
+        - amount
+        - category
+        - emotion
+        - reason
+      properties:
+        amount:
+          type: integer
+          description: Amount in Korean Won (KRW)
+        category:
+          type: string
+          description: "Spending category e.g. 음식, 쇼핑, 오락, 뷰티, 교통, 카페"
+        emotion:
+          type: string
+          description: "Emotion at time of purchase e.g. 스트레스, 슬픔, 기쁨, 외로움, 무료함, 보상"
+        reason:
+          type: string
+          description: Free-text reason for spending
+        note:
+          type: ["string", "null"]
+          description: Optional additional note
+
+    SpendingRecord:
+      type: object
+      required:
+        - id
+        - amount
+        - category
+        - emotion
+        - reason
+        - createdAt
+      properties:
+        id:
+          type: integer
+        amount:
+          type: integer
+        category:
+          type: string
+        emotion:
+          type: string
+        reason:
+          type: string
+        note:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        analysis:
+          $ref: "#/components/schemas/EmotionalAnalysis"
+
+    EmotionalAnalysis:
+      type: object
+      required:
+        - spendingPattern
+        - emotionalTrigger
+        - personalizedAdvice
+      properties:
+        spendingPattern:
+          type: string
+          description: Identified spending pattern in Korean
+        emotionalTrigger:
+          type: string
+          description: Emotional trigger analysis in Korean
+        personalizedAdvice:
+          type: string
+          description: Personalized advice in Korean
+
+    SpendingSummary:
+      type: object
+      required:
+        - totalAmount
+        - totalCount
+        - topEmotion
+        - topCategory
+        - emotionBreakdown
+        - categoryBreakdown
+        - weeklyTrend
+      properties:
+        totalAmount:
+          type: integer
+        totalCount:
+          type: integer
+        topEmotion:
+          type: string
+        topCategory:
+          type: string
+        emotionBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownItem"
+        categoryBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/BreakdownItem"
+        weeklyTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeeklyTrendItem"
+        overallInsight:
+          type: ["string", "null"]
+
+    BreakdownItem:
+      type: object
+      required:
+        - label
+        - count
+        - amount
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+        amount:
+          type: integer
+
+    WeeklyTrendItem:
+      type: object
+      required:
+        - week
+        - amount
+        - count
+      properties:
+        week:
+          type: string
+        amount:
+          type: integer
+        count:
+          type: integer
+
+    UserProfile:
+      type: object
+      required:
+        - id
+        - nickname
+        - onboardingCompleted
+      properties:
+        id:
+          type: integer
+        nickname:
+          type: string
+        spendingGoal:
+          type: ["integer", "null"]
+        onboardingCompleted:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    UserProfileInput:
+      type: object
+      properties:
+        nickname:
+          type: string
+        spendingGoal:
+          type: ["integer", "null"]
+
+    OnboardingInput:
+      type: object
+      required:
+        - nickname
+      properties:
+        nickname:
+          type: string
+        spendingGoal:
+          type: ["integer", "null"]
